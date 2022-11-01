@@ -3106,8 +3106,7 @@ LogicalResult StmtEmitter::visitStmt(OutputOp op) {
     ps << PP::ibox2;
     bool isZeroBit = isZeroBitType(port.type);
     if (isZeroBit) {
-      ps << BeginToken(0, Breaks::Never);
-      ps << "// Zero width: ";
+      ps << PP::neverbox << "// Zero width: ";
     }
     // TODO: Close to emitAssignLike...
     ps << "assign" << PP::space;
@@ -3203,7 +3202,7 @@ LogicalResult StmtEmitter::visitSV(VerbatimOp op) {
   startStatement();
   SmallPtrSet<Operation *, 8> ops;
   ops.insert(op);
-  ps << BeginToken(0, Breaks::Never);
+  ps << PP::neverbox;
 
   // Drop an extraneous \n off the end of the string if present.
   StringRef string = op.getFormatString();
@@ -3221,9 +3220,7 @@ LogicalResult StmtEmitter::visitSV(VerbatimOp op) {
     if (isFirst)
       isFirst = false;
     else {
-      ps << PP::end;
-      ps << PP::newline;
-      ps << BeginToken(0, Breaks::Never);
+      ps << PP::end << PP::newline << PP::neverbox;
     }
 
     // Emit each chunk of the line.
@@ -4002,8 +3999,7 @@ LogicalResult StmtEmitter::visitStmt(InstanceOp op) {
     } else {
       // We comment out zero width ports, so their presence and initializer
       // expressions are still emitted textually.
-      ps << BeginToken(0, Breaks::Never);
-      ps << "//";
+      ps << PP::neverbox << "//";
     }
 
     ps << PP::ibox2 << "." << PPExtString(getPortVerilogName(moduleOp, elt));
@@ -4094,7 +4090,7 @@ LogicalResult StmtEmitter::visitSV(InterfaceSignalOp op) {
 
   startStatement();
   if (isZeroBitType(op.getType()))
-    ps << BeginToken(0, Breaks::Never) << "// ";
+    ps << PP::neverbox << "// ";
   ps.invokeWithStringOS([&](auto &os) {
     emitter.printPackedType(stripUnpackedTypes(op.getType()), os, op->getLoc(),
                             Type(), false);
@@ -4294,8 +4290,7 @@ LogicalResult StmtEmitter::emitDeclaration(Operation *op) {
     auto extraIndent = word.empty() ? 0 : 1;
     ps.spaces(maxDeclNameWidth - word.size() + extraIndent);
   } else {
-    ps << BeginToken(0, Breaks::Never) << "// Zero width: " << PPExtString(word)
-       << PP::space;
+    ps << PP::neverbox << "// Zero width: " << PPExtString(word) << PP::space;
   }
 
   SmallString<8> typeString;
@@ -4521,7 +4516,7 @@ void ModuleEmitter::emitBind(BindOp op) {
     } else {
       // We comment out zero width ports, so their presence and initializer
       // expressions are still emitted textually.
-      ps << BeginToken(0, Breaks::Never) << "//";
+      ps << PP::neverbox << "//";
     }
 
     ps << "." << elt.getName();
@@ -4772,7 +4767,7 @@ void ModuleEmitter::emitHWModule(HWModuleOp module) {
     if (hasZeroWidth) {
       isZeroWidth = isZeroBitType(portType);
       if (isZeroWidth)
-        ps << BeginToken(0, Breaks::Never);
+        ps << PP::neverbox;
       ps << (isZeroWidth ? "// " : "   ");
     }
 
